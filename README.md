@@ -10,9 +10,13 @@ This is a highly-customizable Gantt Chart control for WinForms
 Chart ganttChart = new Chart(); //Can also be added via the designer
 ganttChart.StartDate = DateTime.Today;
 ganttChart.EndDate = DateTime.Today.AddDays(5);
+
+this.Controls.Add(ganttChart); //Add the chart to the form
+ganttChart.Dock = DockStyle.Fill; //Expand the chart to fill the form
+
 Row row = new Row("Row 1");
-row.TimeBlocks.Add(new TimeBlock("Shift 1", DateTime.Today.AddHours(8), DateTime.Today.AddHours(17)));
-ganttChart.Rows.add(row);
+row.TimeBlocks.Add(new TimeBlock("Shift 1", DateTime.Today.AddHours(8), DateTime.Today.AddHours(17)) { Color = Color.Red });
+ganttChart.Rows.Add(row);
 ganttChart.UpdateView();
 ```
 
