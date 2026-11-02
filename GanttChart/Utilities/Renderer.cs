@@ -325,7 +325,8 @@ namespace GanttChart
                     int timeBlockStartX = GetXLocationForTime(timeBlock.StartTime) + 1;
                     int timeBlockEndX = GetXLocationForTime(timeBlock.EndTime) - 1;
                     int timeBlockY = row.Rect.Y + 5;
-                    Rectangle rect = new Rectangle(timeBlockStartX, timeBlockY, timeBlockEndX - timeBlockStartX, 20);
+                    int timeBlockWidth = Math.Max(timeBlockEndX - timeBlockStartX, 1); //Keep very short timeblocks visible
+                    Rectangle rect = new Rectangle(timeBlockStartX, timeBlockY, timeBlockWidth, 20);
                     DrawRect(rect, timeBlock.Color, timeBlock.Color, hatch: timeBlock.Hatch);
 
                     timeBlock.Rect = rect;
@@ -397,11 +398,7 @@ namespace GanttChart
                 now > EndDate)
                 return;
 
-            Tuple<DateTime, int, StringFormat> timeBehind = TimeXLocations.LastOrDefault(p => p.Item1 <= now);
-            Tuple<DateTime, int, StringFormat> timeAhead = TimeXLocations.FirstOrDefault(p => p.Item1 >= now);
-
-            double percentageOfTimeBlock = (double)(now.Ticks - timeBehind.Item1.Ticks) / (timeAhead.Item1.Ticks - timeBehind.Item1.Ticks);
-            int nowXLoc = (int)Math.Round(percentageOfTimeBlock * (timeAhead.Item2 - timeBehind.Item2) + timeBehind.Item2);
+            int nowXLoc = GetXLocationForTime(now);
 
             //Draw line
             Point topPoint = new Point(nowXLoc, startY);
@@ -462,11 +459,20 @@ namespace GanttChart
 
         private int GetXLocationForTime(DateTime dateAndTime)
         {
-            Tuple<DateTime, int, StringFormat> foundGroup = TimeXLocations.Find(p => p.Item1 == dateAndTime);
-            if (foundGroup != null)
-                return foundGroup.Item2;
-            else
+            Tuple<DateTime, int, StringFormat> timeBehind = TimeXLocations.LastOrDefault(p => p.Item1 <= dateAndTime);
+            Tuple<DateTime, int, StringFormat> timeAhead = TimeXLocations.FirstOrDefault(p => p.Item1 >= dateAndTime);
+
+            if (timeBehind == null && timeAhead == null)
                 return -1;
+            else if (timeBehind == null) //Before the start of the chart
+                return timeAhead.Item2;
+            else if (timeAhead == null) //After the end of the chart
+                return timeBehind.Item2;
+            else if (timeBehind.Item1 == timeAhead.Item1) //Exactly on a time division
+                return timeBehind.Item2;
+
+            double percentageOfTimeBlock = (double)(dateAndTime.Ticks - timeBehind.Item1.Ticks) / (timeAhead.Item1.Ticks - timeBehind.Item1.Ticks);
+            return (int)Math.Round(percentageOfTimeBlock * (timeAhead.Item2 - timeBehind.Item2) + timeBehind.Item2);
         }
 
         private void DrawVerticalGridLines(int startX, int startY, int endX, int endY)
@@ -546,7 +552,7 @@ namespace GanttChart
             if (stringLengthPixels > rect.Width - 3) //"3" leaves room for margin on both sides
             {
                 int convertedLength = (int)((double)(rect.Width - 5) / stringLengthPixels * text.Length);
-                if (convertedLength < 0)
+                if (convertedLength <= 0)
                     text = "";
                 else
                     text = text.Substring(0, convertedLength) + "..";
