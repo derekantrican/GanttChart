@@ -199,6 +199,10 @@ namespace GanttChart
             if (IsDesignerHosted || this.DesignMode)
                 return;
 
+            //Don't paint until the dates have been set (eg a chart just added via the designer)
+            if (StartDate == DateTime.MinValue && EndDate == DateTime.MinValue)
+                return;
+
             this.AutoScrollMinSize = renderer.CalculateAutoScrollSize(this.AutoScrollMinSize, this.Size, this.VerticalScroll);
 
             renderer.Render(e.Graphics, this.AutoScrollPosition, this.AutoScrollMinSize, this.Font);
@@ -322,6 +326,7 @@ namespace GanttChart
         /// The main data for the chart
         /// </summary>
         [Category("Gantt Chart")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<Row> Rows
         {
             get { return renderer.Rows; }
@@ -571,6 +576,7 @@ namespace GanttChart
         /// <para>Keys are DateTime and Values are string (the DateTime format string)</para>
         /// </summary>
         [Category("Gantt Chart")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Dictionary<DateTime, string> TimeLabelFormats
         {
             get { return renderer.TimeLabelFormats; }
@@ -582,6 +588,7 @@ namespace GanttChart
         /// <para>Keys are DateTime and Values are string (the DateTime format string)</para>
         /// </summary>
         [Category("Gantt Chart")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Dictionary<DateTime, string> DayLabelFormats
         {
             get { return renderer.DayLabelFormats; }
@@ -593,6 +600,7 @@ namespace GanttChart
         /// <para>Keys are DateTime and Values are string (the name of the Holiday)</para>
         /// </summary>
         [Category("Gantt Chart")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Dictionary<DateTime, string> Holidays
         {
             get { return renderer.Holidays; }
